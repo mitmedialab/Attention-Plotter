@@ -12,7 +12,6 @@ def index():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    print 'in login';
     form = LoginForm(request.form)
     if form.validate_on_submit():
         user = authenticate_user(form.email.data, form.password.data)
@@ -27,6 +26,16 @@ def login():
 def logout():
     logout_user()
     return redirect(url_for('index'))
+
+@app.route('/new-project', methods=['GET', 'POST'])
+@login_required
+def new_project():
+    form = NewProjectForm(request.form)
+    if form.validate_on_submit():
+        # TODO
+        flash('That worked, cool!')
+        return render_template('new-project.html', form=form)        
+    return render_template('new-project.html', form=form)
 
 # Callback for flask-login
 @login_manager.user_loader

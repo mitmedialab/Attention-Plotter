@@ -14,6 +14,7 @@
                 <li><a href="/projects">All projects</a></li>
                 {% if current_user.is_authenticated() %}
                     <li><a href="projects/{{ current_user.name }}">My projects</a></li>
+                    <li><a href="new-project">New project</a></li>
                 {% endif %}
                 {% if current_user.is_authenticated() %}
                     <li><a href="/logout">Log out</a></li>
@@ -21,6 +22,7 @@
                     <li><a href="/login">Log in</a></li>
                 {% endif %}
             </ul>
+            <hr/>
             {% with messages = get_flashed_messages() %}
                 {% if messages %}
                     <ul class="flashes">

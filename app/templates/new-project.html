@@ -1,0 +1,17 @@
+{% extends "wrapper.html" %}
+{% from "_formhelpers.html" import render_field %}
+{% block content %}
+<h2>New Project</h2>
+<form method="post" action="/new-project">
+    <fieldset>
+        {{ render_field(form.name) }}
+        {{ render_field(form.keywords) }}
+        {{ render_field(form.start_date) }}
+        {{ render_field(form.end_date) }}
+        {{ form.csrf_token }}
+        <div class="form-group">
+            <button type="submit" class="btn btn-primary">Create</button>
+        </div>
+    </fieldset>
+</form>
+{% endblock %}
