@@ -6,7 +6,8 @@ from app import db
 
 # User class
 class User(UserMixin):
-    def __init__(self, name, id, active=True):
+    def __init__(self, email, name, id, active=True):
+        self.email = email
         self.name = name
         self.id = id
         self.active = active
@@ -25,7 +26,7 @@ def authenticate_user(email, password):
     hash = hashlib.sha1(password).hexdigest()
     result = db.users.find_one({u'email': email, u'hash': hash})
     if (result):
-        return User(result['username'], result['email'])
+        return User(result['email'], result['username'], result['username'])
     flash('Invalid username/password combination.')
     return AnonymousUserMixin()
 

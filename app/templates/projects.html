@@ -1,0 +1,13 @@
+{% extends "wrapper.html" %}
+{% block content %}
+{% if username == None %}
+<h2>All Projects</h2>
+{% else %}
+<h2>Projects by {{ username }}</h2>
+{% endif %}
+<ul>
+{% for project in projects %}
+    <li><a href="/{{ project.owner }}/{{ project.name }}">{{ project.owner }}/{{ project.name }}</a></li>
+{% endfor %}
+</ul>
+{% endblock %}

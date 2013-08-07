@@ -6,8 +6,8 @@
     <fieldset>
         {{ render_field(form.name) }}
         {{ render_field(form.keywords) }}
-        {{ render_field(form.start_date) }}
-        {{ render_field(form.end_date) }}
+        {{ render_field(form.start_date, class="datepicker") }}
+        {{ render_field(form.end_date, class="datepicker") }}
         {{ form.csrf_token }}
         <div class="form-group">
             <button type="submit" class="btn btn-primary">Create</button>
