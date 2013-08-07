@@ -38,11 +38,26 @@ def projects(username=None):
 
 @app.route('/<username>/<project_name>')
 def project(username, project_name):
-    project = db.projects.find_one({'name':project_name, 'owner':username});
+    project = db.projects.find_one({'name':project_name, 'owner':username})
     if project == None:
         flash("Sorry, that project doesn't exist.")
         return render_template('wrapper.html')
     return render_template('project.html', project=project)
+
+@app.route('/<username>/<project_name>/settings', methods=['GET', 'POST'])
+def project_settings(username, project_name):
+    if current_user.name != username:
+        abort(403)
+    delete_form = DeleteProjectForm(prefix="delete")
+    if delete_form.validate_on_submit():
+        if project_name == delete_form.name.data:
+            db.projects.remove({'name':delete_form.name.data})
+            flash('Project deleted.')
+            return redirect(url_for('index'))
+        else:
+            flash('Project name did not match.')
+    project = db.projects.find_one({'name':project_name, 'owner':username})
+    return render_template('project-settings.html', project=project, delete_form=delete_form)
 
 @app.route('/new-project', methods=['GET', 'POST'])
 @login_required

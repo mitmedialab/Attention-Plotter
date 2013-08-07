@@ -1,0 +1,31 @@
+{% extends "wrapper.html" %}
+{% from "_formhelpers.html" import render_field %}
+{% block content %}
+<h2>{{ project.owner }}/{{ project.name }} Settings</h2>
+<ul class="nav nav-tabs">
+    <li class="active"><a href="#info" data-toggle="tab">Basic info</a></li>
+    <li><a href="#delete" data-toggle="tab">Delete</a></li>
+</ul>
+<div class="tab-content" id="settings-tab">
+    <div class="tab-pane active" id="info">
+        <dl>
+            <dt>Keywords</dt>
+            <dd>{{ ', '.join(project['keywords']) }}</dd>
+            <dt>Start</dt>
+            <dd>{{ project.start }}</dd>
+            <dt>End</dt>
+            <dd>{{ project.end }}</dd>
+        </dl>
+    </div>
+    <div class="tab-pane" id="delete">
+        <h3>Delete Project</h3>
+        <form method="post" action="/{{ project.owner }}/{{ project.name }}/settings">
+            <fieldset>
+                {{ render_field(delete_form.name) }}
+                {{ delete_form.csrf_token }}
+                <button type="submit" class="btn btn-danger">Delete</button>
+            </fieldset>
+        </form>
+    </div>
+</div>
+{% endblock %}

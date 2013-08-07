@@ -1,4 +1,7 @@
 {% extends "wrapper.html" %}
 {% block content %}
-<h2>{{ current_user.name }}/{{ project.name }}</h2>
+<h2>{{ project.owner }}/{{ project.name }}</h2>
+{% if project.owner == current_user.name %}
+    <a href="/{{ project.owner }}/{{ project.name }}/settings">Manage settings</a>
+{% endif %}
 {% endblock %}

@@ -10,4 +10,7 @@ class NewProjectForm(Form):
     keywords = TextField('Keywords', [validators.Required()])
     start_date = TextField('Start Date', [validators.Required()])
     end_date = TextField('End Date', [validators.Required()])
+
+class DeleteProjectForm(Form):
+    name = TextField('Name', [validators.Required()])
     
