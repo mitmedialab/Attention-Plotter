@@ -17,4 +17,11 @@ login_manager.init_app(app)
 # Connect to db
 db = Connection(config_host)[config_db]
 
+# Data source configuration
+from app.sources.source import Source
+from app.sources.csvsource import CsvSource
+sources = [
+    CsvSource
+]
+
 from app import views
