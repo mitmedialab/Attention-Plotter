@@ -1,0 +1,13 @@
+{% extends "wrapper.html" %}
+{% from "_formhelpers.html" import render_field %}
+{% block content %}
+<h2>Add {{ source_name }} Source</h2>
+<form method="post" enctype="multipart/form-data" action="/{{ project.owner }}/{{ project.name }}/add-source/{{ source_name }}">
+    <fieldset>
+        {% for field in create_form %}
+            {{ render_field(field) }}
+        {% endfor %}
+        <button type="submit" class="btn btn-primary">Add</button>
+    </fieldset>
+</form>
+{% endblock %}

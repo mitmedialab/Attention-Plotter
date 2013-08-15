@@ -22,13 +22,11 @@
         <h3>Sources</h3>
         <form method="post" action="/{{ project.owner }}/{{ project.name }}/settings">
             <fieldset>
-                {% for field in source_form %}
-                    {% if field != source_form.csrf_token %}
-                        {{ render_field(field) }}
-                    {% endif %}
-                {% endfor %}
-                {{ source_form.csrf_token }}
-                <button type="submit" class="btn btn-primary">Update</button>
+                <div class="form-horizontal">
+                    {{ add_type_form.source_type }}
+                    {{ add_type_form.csrf_token }}
+                    <button class="btn btn-primary">Add source</button>
+                </div>
             </fieldset>
         </form>
     </div>

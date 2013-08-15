@@ -7,6 +7,8 @@
             </label>
         {% elif field.type == "HiddenField" %}
             {{ field(**kwargs)|safe }}
+        {% elif field.type == "CSRFTokenField" %}
+            {{ field(**kwargs)|safe }}
         {% else %}
             {{ field.label }}
             {{ field(**kwargs)|safe }}

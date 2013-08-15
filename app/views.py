@@ -2,9 +2,9 @@ from flask import Flask, flash, redirect, render_template, request, url_for
 from flask_login import AnonymousUserMixin, current_user, login_required, login_user, logout_user
 import pymongo
 
-from app import app, login_manager, db, sources
+from app import app, login_manager, db, sources, TaskStatus
 from user import User, authenticate_user
-from forms import LoginForm, DeleteProjectForm, NewProjectForm, make_source_form
+from forms import LoginForm, DeleteProjectForm, NewProjectForm, AddSourceTypeForm, make_source_form
 
 @app.route('/')
 def index():
@@ -69,21 +69,34 @@ def project_settings(username, project_name):
             return redirect(url_for('index'))
         else:
             flash('Project name did not match.')
-    SourceForm = make_source_form(project)
-    source_form = SourceForm(method='source')
-    if source_form.validate_on_submit() and source_form.method.data == 'source':
-        for source in sources:
-            print source.name
-            params = project['source_params'].get(source.name, {})
-            if getattr(source_form, source.name).data:
-                params['enabled'] = True
-            else:
-                params['enabled'] = False
-            project['source_params'][source.name] = params
-            print project
-            db.projects.update({'_id':project['_id']}, project)
-    return render_template('project-settings.html', project=project, delete_form=delete_form, source_form=source_form)
+    add_type_form = AddSourceTypeForm(prefix="add_source_type")
+    if not add_type_form.source_type.data == 'None':
+        return redirect(url_for('add_source', username=username, project_name=project_name, source_name=add_type_form.source_type.data))
+    return render_template(
+        'project-settings.html'
+        , project=project
+        , delete_form=delete_form
+        , add_type_form=add_type_form
+        , sources=sources)
 
+@app.route('/<username>/<project_name>/add-source/<source_name>', methods=['GET', 'POST'])
+@login_required
+def add_source(username, project_name, source_name):
+    project = db.projects.find_one({'name':project_name, 'owner':username})
+    source = sources[source_name]
+    CreateForm = source.create_form()
+    create_form = CreateForm()
+    if create_form.validate_on_submit():
+        s = source.create(request, username, project_name)
+        s['project_id'] = project['_id']
+        db.sources.insert(s)
+        return redirect(url_for('project_settings', project_name=project_name, username=username))
+    return render_template(
+        'add-source.html'
+        , project=project
+        , source_name=source_name
+        , create_form=create_form)
+    
 @app.route('/new-project', methods=['GET', 'POST'])
 @login_required
 def new_project():
@@ -95,7 +108,6 @@ def new_project():
             , 'end': form.end_date.data
             , 'keywords': [k.strip() for k in form.keywords.data.split(',')]
             , 'owner' : current_user.id
-            , 'source_params' : {}
         }
         existing = db.projects.find_one({'name':form.name.data, 'owner':current_user.id})
         if existing == None:

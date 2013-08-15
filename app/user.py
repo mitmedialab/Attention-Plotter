@@ -1,5 +1,6 @@
 import hashlib
 
+from flask import flash
 from flask_login import UserMixin, AnonymousUserMixin
 
 from app import db

@@ -1,5 +1,5 @@
 from flask.ext.wtf import Form
-from wtforms import TextField, PasswordField, BooleanField, HiddenField, validators
+from wtforms import TextField, PasswordField, SelectField, BooleanField, HiddenField, validators
 
 from app import sources
 
@@ -15,6 +15,9 @@ class NewProjectForm(Form):
 
 class DeleteProjectForm(Form):
     name = TextField('Name', [validators.Required()])
+
+class AddSourceTypeForm(Form):
+    source_type = SelectField('Source Type', choices=[(source, source) for source in sources.keys()])
 
 def make_source_form(project):
     class SourceForm(Form):
