@@ -24,21 +24,21 @@ db = Connection(config_host)[config_db]
 def enum(**enums):
     return type('Enum', (), enums)
 TaskStatus = enum(
-    DISABLED = 0
-    , ENABLED = 1
-    , EXTRACTING = 2
-    , EXTRACTED = 3
-    , TRANSFORMING = 4
-    , TRANSFORMED = 5
-    , LOADING = 6
-    , COMPLETE = 7
+    DISABLED = 'Disabled'
+    , ENABLED = 'Enabled'
+    , EXTRACTING = 'Extracting'
+    , EXTRACTED = 'Extracted'
+    , TRANSFORMING = 'Transforming'
+    , TRANSFORMED = 'Transformed'
+    , LOADING = 'Loading'
+    , COMPLETE = 'Complete'
 )
 
 # Data source configuration
 from app.sources.source import Source
 from app.sources.csvsource import CsvSource
-sources = {
+Source.add_sources({
     CsvSource.name: CsvSource
-}
+})
 
 from app import views

@@ -1,7 +1,8 @@
 from flask.ext.wtf import Form
 from wtforms import TextField, PasswordField, SelectField, BooleanField, HiddenField, validators
+import pymongo
 
-from app import sources
+from app.sources.source import Source
 
 class LoginForm(Form):
     email = TextField('Email Address', [validators.Required()])
@@ -17,7 +18,7 @@ class DeleteProjectForm(Form):
     name = TextField('Name', [validators.Required()])
 
 class AddSourceTypeForm(Form):
-    source_type = SelectField('Source Type', choices=[(source, source) for source in sources.keys()])
+    source_type = SelectField('Source Type', choices=[(source, source) for source in Source.sources.keys()])
 
 def make_source_form(project):
     class SourceForm(Form):

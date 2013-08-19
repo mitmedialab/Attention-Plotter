@@ -1,8 +1,11 @@
+import json
+
 from flask import Flask, flash, redirect, render_template, request, url_for
 from flask_login import AnonymousUserMixin, current_user, login_required, login_user, logout_user
 import pymongo
 
-from app import app, login_manager, db, sources, TaskStatus
+from app import app, login_manager, db, TaskStatus
+from app.sources.source import Source
 from user import User, authenticate_user
 from forms import LoginForm, DeleteProjectForm, NewProjectForm, AddSourceTypeForm, make_source_form
 
@@ -54,13 +57,26 @@ def project(username, project_name):
     if project == None:
         flash("Sorry, that project doesn't exist.")
         return render_template('wrapper.html')
-    return render_template('project.html', project=project)
+    sources = db.sources.find({'project_id':project['_id']})
+    # Create d3-friendly json
+    # There's probably a better way to do this, like a "group by" in sql -Ed
+    data = []
+    for source in sources:
+        query = {'source_id':source['_id']}
+        fields = {'_id':False, 'source_id':False}
+        source_data = {
+            'name':source['label']
+            , 'data':list(db.results.find(query, fields=fields))
+        }
+        data.append(source_data)
+    return render_template('project.html', project=project, data=json.dumps(data))
 
 @app.route('/<username>/<project_name>/settings', methods=['GET', 'POST'])
 def project_settings(username, project_name):
     if current_user.name != username:
         abort(403)
     project = db.projects.find_one({'name':project_name, 'owner':username})
+    source_list = list(db.sources.find({'project_id':project['_id']}))
     delete_form = DeleteProjectForm(prefix="delete")
     if delete_form.validate_on_submit():
         if project_name == delete_form.name.data:
@@ -77,13 +93,13 @@ def project_settings(username, project_name):
         , project=project
         , delete_form=delete_form
         , add_type_form=add_type_form
-        , sources=sources)
+        , sources=source_list)
 
 @app.route('/<username>/<project_name>/add-source/<source_name>', methods=['GET', 'POST'])
 @login_required
 def add_source(username, project_name, source_name):
     project = db.projects.find_one({'name':project_name, 'owner':username})
-    source = sources[source_name]
+    source = Source.sources[source_name]
     CreateForm = source.create_form()
     create_form = CreateForm()
     if create_form.validate_on_submit():

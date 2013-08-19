@@ -4,4 +4,7 @@
 {% if project.owner == current_user.name %}
     <a href="/{{ project.owner }}/{{ project.name }}/settings">Manage settings</a>
 {% endif %}
+<script type="text/javascript">
+    layers = {{ data|safe }};
+</script>
 {% endblock %}

@@ -29,6 +29,26 @@
                 </div>
             </fieldset>
         </form>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Label</th>
+                    <th>Type</th>
+                    <th>Status</th>
+                    <th>Ops</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for source in sources %}
+                <tr>
+                    <td>{{ source['label'] }}</td>
+                    <td>{{ source['type'] }}</td>
+                    <td>{{ source['status'] }}</td>
+                    <td>TODO</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
     <div class="tab-pane" id="delete">
         <h3>Delete Project</h3>
