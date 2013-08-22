@@ -26,7 +26,7 @@ class CsvSource(Source):
             reader = csv.reader(csvfile)
             reader.next()
             for row in reader:
-                db.counts.insert({ 'source_id': self.data['_id'], 'date': row[0], 'count': int(row[1]) })
+                db.counts.insert({ 'source_id': self.data['_id'], 'date': row[0], 'count': float(row[1]) })
         self.data['status'] = TaskStatus.EXTRACTED
         self.save()
     
@@ -34,11 +34,8 @@ class CsvSource(Source):
         self.data['status'] = TaskStatus.TRANSFORMING
         self.save()
         peak = db.counts.find_one({'source_id':self.data['_id']}, limit=1, sort=[('count', pymongo.DESCENDING)])['count']
-        print peak
         cardinality = db.counts.find({'source_id':self.data['_id']}).count()
-        print cardinality
         doc_count = cardinality - db.counts.find({'source_id':self.data['_id'], 'count':0}).count()
-        print doc_count
         for data in db.counts.find({'source_id':self.data['_id']}):
             data['normalized'] = data['count'] / peak
             data['tfidf'] = data['count'] * math.log(cardinality / doc_count, 10)
@@ -53,6 +50,7 @@ class CsvSource(Source):
         for data in db.transformed.find({'source_id':self.data['_id']}):
             db.results.insert({
                 'source_id': self.data['_id']
+                , 'project_id': self.data['project_id']
                 , 'label': self.data['label']
                 , 'date': data['date']
                 , 'value': data['tfidf']

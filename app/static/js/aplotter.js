@@ -3,35 +3,25 @@
  * https://github.com/erhardt/Attention-Plotter
  */
 
-
-/* VARIABLES YOU CAN CHANGE */
-
-// Path to csv file containing volumes of media by day
-// Column headers should be: date, [media source 1], [media source 2], ...
-// Make sure data is already normalized
-// Recommended date format: mmm d
-var mediacsv = 'data/media.csv';
-
-// Path to csv file containing word frequencies by day
-// Column headers should be: date, word, magnitude
-// Dates should be formatted identically to those in media.csv
-// Recommended metric for magnitude: tf-idf
-var wordscsv = 'data/words.csv';
-
 // Dimensions of the graph
 var graphwidth = 2000;
 var graphheight = 400;
-
-
-/* VARIABLES AND FUNCTIONS YOU CHANGE AT YOUR OWN RISK */
 
 // d3 params and helper functions
 var margin = {top: 50, right: 80, bottom: 50, left: 80},
     width = graphwidth - margin.left - margin.right,
     height = graphheight - margin.top - margin.bottom;
 
+// Runs functions after page loads
+$(window).load(function() {
+  //adjustElements();
+  //buttonSwitcher();
+  //wordClouds();
+  //giveCredit();
+});
+
 var x0 = d3.scale.ordinal()
-    .rangeRoundBands([0, width], .05);
+    .rangeRoundBands([0, width], .1);
 
 var x1 = d3.scale.ordinal();
 
@@ -56,39 +46,44 @@ var svg = d3.select('#vis').append('svg')
     .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
 // d3 MAIN FUNCTION (starts by reading data from the mediacsv file)
-d3.csv(mediacsv, function(error, data) {
-  
-  // creates data map for histogram
-  var mediaH = d3.keys(data[0]).filter(function(key) { return key !== 'date'; });
-  
-  // maps each attention level to its medium and date in a new variable for histogram
-  data.forEach(function(d) {
-    d.medium = mediaH.map(function(name) { return {name: name, value: +d[name]}; }); 
-  });
+var plotData = function(mediaS) {
 
+  // get layer names
+  var mediaH = mediaS.map(function (d) { return d.name; });
+  
+  // get dates
+  var dates = mediaS[0].values.map(function (d) { return d.date; });
+  
+  // Organize data by date
+  var dataByDate = [];
+  jQuery.each(dates, function (i, d) {
+    elt = {
+      'date': d
+      , 'media': mediaS.map(function (d) { return {'name':d.name, 'value':d.values[i]}; })
+    }
+    dataByDate.push(elt);
+  });
+  window.dataByDate = dataByDate;
+  
   // creates data map for sparklines
-  color.domain(d3.keys(data[0]).filter(function(key) { return key !== 'date'; }));
-
-  // Maps each date & attention level to a color for sparklines
-  var mediaS = color.domain().map(function(name) {
-    return {
-      name: name,
-      values: data.map(function(d) {
-        return {date: d.date, attention: +d[name]};
-      })
-    };
-  });
+  color.domain(mediaH);
 
   // sets x- and y-axis dimensions
-  x0.domain(data.map(function(d) { return d.date; }));
+  x0.domain(dates);
   x1.domain(mediaH).rangeRoundBands([0, x0.rangeBand()]);
-  y.domain([0, d3.max(data, function(d) { return d3.max(d.medium, function(d) { return d.value; }); })]);
+  var layerMax = function(layer) {
+    return d3.max(layer.values, function(d) { return d.value; });
+  }
+  y.domain([0, d3.max(mediaS, layerMax)]);
 
   // creates x-axis
   svg.append('g')
       .attr('class', 'x axis')
       .attr('transform', 'translate(0,' + height + ')')
       .call(xAxis);
+  d3.selectAll('.x.axis .tick line')
+    .attr('stroke', 'black');
+  d3.selectAll('.x.axis path').remove();
 
   // rotates x-axis labels
   svg.selectAll('.x.axis text')  // select all the text elements for the x-axis
@@ -99,32 +94,34 @@ d3.csv(mediacsv, function(error, data) {
       });
 
   // instantiates media.csv data
-  var mediumH = svg.selectAll('.medium')
-      .data(data)
+  var mediumH = svg.selectAll('.date')
+      .data(dataByDate)
     .enter().append('g')   // create svg group (g) for every date
       .attr('class', 'g date')
       .attr('transform', function(d) { return 'translate(' + x0(d.date) + ',0)'; });
   
   // generates x axis 'platforms' for bars over each date
-  mediumH.selectAll('line')
-      .data(function(d) { return d.medium; })   
+  mediumH.selectAll('line.platform')
+      .data(mediaH)
     .enter().append('line')
       .attr('class','platform')
-      .attr('x1', function(d) { return x1(d.name); })
-      .attr('y1', height)
-      .attr('x2',function(d) { return x1(d.name) + x1.rangeBand(); })
-      .attr('y2', height);
+      .attr('stroke-width', '1')
+      .attr('stroke', 'black')
+      .attr('x1', function (d) { return x1(d) + 0.5; })
+      .attr('y1', height + 0.5)
+      .attr('x2', function (d) { return x1(d) + 0.5 + x1.rangeBand() + 0.5; })
+      .attr('y2', height + 0.5);
 
   // creates bars
   mediumH.selectAll('rect')
-      .data(function(d) { return d.medium; })
+      .data(function(d) { return d.media; })
     .enter().append('rect')
       .attr('class', function(d) { return 'bar' + mediaH.indexOf(d.name); }) // index on array
       .style('fill', function(d) { return color(d.name); })
       .attr('width', x1.rangeBand())
       .attr('x', function(d) { return x1(d.name); })
-      .attr('y', function(d) { return y(d.value)-1; })
-      .attr('height', function(d) { return height - y(d.value); });
+      .attr('y', function(d) { return y(d.value.value)-1; })
+      .attr('height', function(d) { return height - y(d.value.value); });
 
   // creates legend
   var legendHeight = 25*(color.range().length-3); // height varies by number of legend items
@@ -178,7 +175,7 @@ d3.csv(mediacsv, function(error, data) {
       .attr('class', function(d) { return 'line line' + mediaS.indexOf(d); }) // use color as an index
       .attr('d', function(d) { return line(d.values); })
       .style('stroke', function(d) { return color(d.name); });
-});
+};
 
 // Resizes the body element and sets the horizontal scroll functions for the header and legend
 function adjustElements() {
@@ -301,11 +298,3 @@ function creditPopover() {
             'trigger': 'hover'
   });
 }
-
-// Runs functions after page loads
-$(window).load(function() {
-  adjustElements();
-  buttonSwitcher();
-  wordClouds();
-  giveCredit();
-});

@@ -1,10 +1,26 @@
 {% extends "wrapper.html" %}
 {% block content %}
-<h2>{{ project.owner }}/{{ project.name }}</h2>
-{% if project.owner == current_user.name %}
-    <a href="/{{ project.owner }}/{{ project.name }}/settings">Manage settings</a>
-{% endif %}
+<h2>
+    {{ project.owner }}/{{ project.name }}
+    {% if project.owner == current_user.name %}
+        <small><a href="/{{ project.owner }}/{{ project.name }}/settings">Manage settings</a></small>
+    {% endif %}
+</h2>
+<div class="btn-group" data-toggle="buttons-radio">
+    <button type="button" id="barbutton" class="btn active switch">Histogram</button>
+    <button type="button" id="linebutton" class="btn switch">Sparklines</button>
+</div>
+<div id="vis-container">
+    <div id="vis"></div>
+    <div id="legend">
+        <h4>Legend</h4>
+    </div>
+</div>
+<script src="/static/js/d3.v3.min.js"></script>
+<script src="/static/js/jquery.popover-1.1.2.js"></script>
+<script src="/static/js/aplotter.js"></script>
 <script type="text/javascript">
-    layers = {{ data|safe }};
+    data = {{ data|safe }};
+    plotData(data);
 </script>
 {% endblock %}
