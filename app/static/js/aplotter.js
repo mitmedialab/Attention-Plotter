@@ -15,9 +15,9 @@ var margin = {top: 50, right: 80, bottom: 50, left: 80},
 // Runs functions after page loads
 $(window).load(function() {
   //adjustElements();
-  //buttonSwitcher();
+  buttonSwitcher();
   //wordClouds();
-  //giveCredit();
+  giveCredit();
 });
 
 var x0 = d3.scale.ordinal()
@@ -37,7 +37,7 @@ var xAxis = d3.svg.axis()
 var line = d3.svg.line()
     .interpolate('monotone')
     .x(function(d) { return x0(d.date)+(x1.rangeBand()*(color.range().length-3)/2); }) // uses color index to capture # of media types
-    .y(function(d) { return y(d.attention); });
+    .y(function(d) { return y(d.value); });
 
 var svg = d3.select('#vis').append('svg')
     .attr('width', width + margin.left + margin.right)
@@ -172,9 +172,12 @@ var plotData = function(mediaS) {
       .attr('class', 'mediumS');
 
   mediumS.append('path')
-      .attr('class', function(d) { return 'line line' + mediaS.indexOf(d); }) // use color as an index
+      .attr('class', function(d) { return 'line line' + color.domain().indexOf(d.name); }) // use color as an index
       .attr('d', function(d) { return line(d.values); })
-      .style('stroke', function(d) { return color(d.name); });
+      .attr('fill', 'none')
+      .attr('stroke', function(d) { return color(d.name); });
+      
+  showBars();
 };
 
 // Resizes the body element and sets the horizontal scroll functions for the header and legend
@@ -199,28 +202,34 @@ function adjustElements() {
   });
 }
 
+// Show spark lines and hide bar graph
+function showSparks() {
+  $(this).attr('class','btn active');
+  $('#barbutton').attr('class','btn');
+  $('#vis rect').hide();
+  $('#vis .platform').hide();
+  $('path.line').show();
+}
+
+// Show bar graph and hide spark lines
+function showBars() {
+  $(this).attr('class','btn active');
+  $('#linebutton').attr('class','btn');
+  $('path.line').hide();
+  $('#vis .platform').show();
+  $('#vis rect').show();
+}
+
 // Adds functionality to switch between graph types using radio buttons
 function buttonSwitcher() {
   $('.btn-group').find('button').bind('click',function(event){
     if($(this).attr('id')==='linebutton'){
-      if($(this).attr('class')==='btn active'){
-        return;
-      } else {
-        $(this).attr('class','btn active');
-        $('#barbutton').attr('class','btn');
-        $('#vis rect').hide();
-        $('#vis .platform').hide();
-        $('path.line').show();
+      if($(this).attr('class')!=='btn active'){
+        showSparks();
       }
     } else {
-      if($(this).attr('class')==='btn active'){
-        return;
-      } else {
-        $(this).attr('class','btn active');
-        $('#linebutton').attr('class','btn');
-        $('path.line').hide();
-        $('#vis .platform').show();
-        $('#vis rect').show();
+      if($(this).attr('class')!=='btn active'){
+        showBars();
       }  
     }
   });
