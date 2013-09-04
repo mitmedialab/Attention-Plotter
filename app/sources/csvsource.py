@@ -1,7 +1,10 @@
 from __future__ import division
-import os
+
 import csv
+import datetime
 import math
+import os
+import time
 
 import pymongo
 from flask.ext.wtf import Form
@@ -26,7 +29,8 @@ class CsvSource(Source):
             reader = csv.reader(csvfile)
             reader.next()
             for row in reader:
-                db.counts.insert({ 'source_id': self.data['_id'], 'date': row[0], 'count': float(row[1]) })
+                date = int(time.mktime(datetime.datetime.strptime(row[0], '%Y-%m-%d').timetuple()))
+                db.counts.insert({ 'source_id': self.data['_id'], 'date': date, 'count': float(row[1]) })
         self.data['status'] = TaskStatus.EXTRACTED
         self.save()
     
