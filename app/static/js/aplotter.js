@@ -69,7 +69,13 @@ var plotData = function(mediaS) {
   color.domain(mediaH);
 
   // sets x- and y-axis dimensions
-  x0.domain(dates);
+  x0.domain(dates.map(function (d) {
+    date = new Date(d * 1000);
+    var y = date.getFullYear();
+    var m = date.getMonth() + 1;
+    var mday = date.getDate();
+    return m + '/' + mday;
+  }));
   x1.domain(mediaH).rangeRoundBands([0, x0.rangeBand()]);
   var layerMax = function(layer) {
     return d3.max(layer.values, function(d) { return d.value; });
