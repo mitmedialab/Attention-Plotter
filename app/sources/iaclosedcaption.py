@@ -1,3 +1,5 @@
+from __future__ import division
+
 import datetime
 import json
 import math
@@ -41,8 +43,11 @@ class IAClosedCaption(Source):
                     , 'output':'json'
                 })
                 url = 'http://archive.org/details/tv?%s' % (query)
-                response = urllib2.urlopen(url).read()
-                results = json.loads(response)
+                results = json.loads(urllib2.urlopen(url).read())
+                print 'Internet Archive News Captions: %s %s' % (
+                    date.strftime('%Y-%m-%d')
+                    , len(results)
+                )
                 if len(results) == 0:
                     break
                 start += len(results)
@@ -55,12 +60,10 @@ class IAClosedCaption(Source):
             date += delta
     
     def transform(self):
-        """Transform raw data (tf-idf etc.)"""
+        """Transform raw data"""
         project = db.projects.find_one({'_id': self.data['project_id']})
         counts = []
         max_count = 0
-        days = 0
-        days_present = 0
         start_date = datetime.datetime.strptime(project['start'], '%Y-%m-%d')
         end_date = datetime.datetime.strptime(project['end'], '%Y-%m-%d')
         date = start_date
@@ -68,15 +71,14 @@ class IAClosedCaption(Source):
         while date <= end_date:
             count = db.raw.find({'source_id': self.data['_id'], 'date':time.mktime(date.timetuple())}).count()
             max_count = max(max_count, count)
-            days += 1
-            if count > 0:
-                days_present += 1
-            counts.append({'date':time.mktime(date.timetuple()), 'count':count})
+            counts.append({
+                'source_id': self.data['_id']
+                , 'date':time.mktime(date.timetuple())
+                , 'count':count
+            })
             date += delta
         for data in counts:
-            data['source_id'] = self.data['_id']
             data['normalized'] = data['count'] / max_count
-            data['tfidf'] = data['count'] * math.log(days / days_present, 10)
         db.transformed.insert(counts)
 
     def load(self):
@@ -87,7 +89,7 @@ class IAClosedCaption(Source):
                 , 'project_id': self.data['project_id']
                 , 'label': self.data['label']
                 , 'date': data['date']
-                , 'value': data['tfidf']
+                , 'value': data['normalized']
             })
     
     @classmethod
