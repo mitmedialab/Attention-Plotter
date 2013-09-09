@@ -37,8 +37,10 @@ TaskStatus = enum(
 # Data source configuration
 from app.sources.source import Source
 from app.sources.csvsource import CsvSource
+from app.sources.iaclosedcaption import IAClosedCaption
 Source.add_sources({
-    CsvSource.name: CsvSource
+    CsvSource.name: CsvSource,
+    IAClosedCaption.name: IAClosedCaption
 })
 
 from app import views

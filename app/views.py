@@ -58,7 +58,7 @@ def project(username, project_name):
     if project == None:
         flash("Sorry, that project doesn't exist.")
         return render_template('wrapper.html')
-    sources = db.sources.find({'project_id':project['_id']})
+    sources = db.sources.find({'project_id':project['_id'], 'status':TaskStatus.COMPLETE})
     # Create d3-friendly json
     # There's probably a better way to do this, like a "group by" in sql -Ed
     data = []
@@ -70,6 +70,7 @@ def project(username, project_name):
             , 'values':list(db.results.find(query, fields=fields, sort=[('date', pymongo.ASCENDING)]))
         }
         data.append(source_data)
+    print data
     return render_template('project.html', project=project, data=json.dumps(data))
 
 @app.route('/<username>/<project_name>/settings', methods=['GET', 'POST'])

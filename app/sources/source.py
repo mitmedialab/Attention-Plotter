@@ -2,6 +2,7 @@ from flask.ext.wtf import Form
 from wtforms import TextField, validators
 
 from app import db
+from app import TaskStatus
 
 class Source(object):
 
@@ -23,6 +24,22 @@ class Source(object):
     def load(self):
         raise NotImplementedError()
     
+    def process(self):
+        """Process the data from raw input to formatted output."""
+        self.data['status'] = TaskStatus.EXTRACTING
+        self.save()
+        self.extract()
+        self.data['status'] = TaskStatus.EXTRACTED
+        self.data['status'] = TaskStatus.TRANSFORMING
+        self.save()
+        self.transform()
+        self.data['status'] = TaskStatus.TRANSFORMED
+        self.data['status'] = TaskStatus.LOADING
+        self.save()
+        self.load()
+        self.data['status'] = TaskStatus.COMPLETE
+        self.save()
+    
     @classmethod
     def add_sources(cls, sources):
         cls.sources.update(sources)
@@ -31,6 +48,18 @@ class Source(object):
     def make(cls, source_data):
         source_class = cls.sources[source_data['type']]
         source = source_class(source_data)
+        return source
+    
+    @classmethod
+    def create(cls, request, username, project_name):
+        CreateForm = cls.create_form()
+        create_form = CreateForm()
+        print "Type is %s" % cls.name
+        source = {
+            'type': cls.name
+            , 'label': create_form.label.data
+            , 'status': TaskStatus.ENABLED
+        }
         return source
     
 class CreateSourceForm(Form):
