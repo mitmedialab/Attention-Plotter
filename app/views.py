@@ -70,7 +70,6 @@ def project(username, project_name):
             , 'values':list(db.results.find(query, fields=fields, sort=[('date', pymongo.ASCENDING)]))
         }
         data.append(source_data)
-    print data
     return render_template('project.html', project=project, data=json.dumps(data))
 
 @app.route('/<username>/<project_name>/settings', methods=['GET', 'POST'])
