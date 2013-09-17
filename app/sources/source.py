@@ -54,7 +54,6 @@ class Source(object):
     def create(cls, request, username, project_name):
         CreateForm = cls.create_form()
         create_form = CreateForm()
-        print "Type is %s" % cls.name
         source = {
             'type': cls.name
             , 'label': create_form.label.data

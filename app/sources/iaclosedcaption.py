@@ -44,10 +44,6 @@ class IAClosedCaption(Source):
                 })
                 url = 'http://archive.org/details/tv?%s' % (query)
                 results = json.loads(urllib2.urlopen(url).read())
-                print 'Internet Archive News Captions: %s %s' % (
-                    date.strftime('%Y-%m-%d')
-                    , len(results)
-                )
                 if len(results) == 0:
                     break
                 start += len(results)
