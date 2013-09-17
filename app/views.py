@@ -67,7 +67,7 @@ def project(username, project_name):
         fields = {'_id':False, 'source_id':False, 'project_id':False}
         source_data = {
             'name':source['label']
-            , 'values':[{'date':r.date, 'value':r.value, 'label':r.label} for r in db.results.find(query, fields=fields, sort=[('date', pymongo.ASCENDING)])]
+            , 'values':[{'date':r['date'], 'value':r['value'], 'label':r['label']} for r in db.results.find(query, fields=fields, sort=[('date', pymongo.ASCENDING)])]
         }
         data.append(source_data)
     return render_template('project.html', project=project, data=json.dumps(data))
