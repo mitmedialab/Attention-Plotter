@@ -56,6 +56,7 @@ class CsvSource(Source):
     
     @classmethod
     def create(cls, request, username, project_name):
+        global config_upload_folder
         CreateForm = cls.create_form()
         create_form = CreateForm()
         if not create_form.csv.data.filename.rsplit('.', 1)[1].lower() == 'csv':
