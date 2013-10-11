@@ -60,6 +60,6 @@ class Source(object):
             , 'status': TaskStatus.ENABLED
         }
         return source
-    
+        
 class CreateSourceForm(Form):
     label = TextField('Label', [validators.Required()])

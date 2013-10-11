@@ -37,8 +37,10 @@ TaskStatus = enum(
 # Data source configuration
 from app.sources.source import Source
 from app.sources.csvsource import CsvSource
+from app.sources.mediacloud import MediaCloud
 from app.sources.iaclosedcaption import IAClosedCaption
 Source.add_sources({
+    MediaCloud.name: MediaCloud,
     CsvSource.name: CsvSource,
     IAClosedCaption.name: IAClosedCaption
 })
