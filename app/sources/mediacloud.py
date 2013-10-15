@@ -1,6 +1,7 @@
 from __future__ import division
 
 import datetime
+import json
 import pymongo
 import time
 import urllib
@@ -35,6 +36,7 @@ class MediaCloud(Source):
         delta = datetime.timedelta(days=1)
         # Loop through each date
         while date <= end_date:
+            # Generate the query params
             fq = "publish_date:[%sT00:00:00Z TO %sT00:00:00Z] AND +media_sets_id:%s" % (
                 date.strftime('%Y-%m-%d')
                 , (date + datetime.timedelta(days=1)).strftime('%Y-%m-%d')
@@ -46,6 +48,7 @@ class MediaCloud(Source):
                 , 'rows':'0'
                 , 'df':'sentence'
             })
+            # Query the count
             url = 'http://mcquery1.media.mit.edu:8983/solr/collection1/select?%s' % (query)
             result = self.xml_to_result(urllib2.urlopen(url).read())
             result.update({
@@ -54,6 +57,15 @@ class MediaCloud(Source):
             })
             db.raw.insert(result)
             date += delta
+            # Query related words
+            url = 'http://mcquery1.media.mit.edu:8080/wc?%s' % (query)
+            count_result = json.loads(urllib2.urlopen(url).read())
+            for word in count_result['words']:
+                word.update({
+                    'source_id': self.data['_id']
+                    , 'date': time.mktime(date.timetuple())
+                })
+                db.words.insert(word)
     
     def transform(self):
         """Transform raw data"""
@@ -67,12 +79,18 @@ class MediaCloud(Source):
     def load(self):
         """Create json results formatted for d3 use."""
         for data in db.transformed.find({'source_id':self.data['_id']}):
+            words = list(db.words.find({
+                'source_id':self.data['_id']
+                , 'date':data['date']
+                , 'value':{'$gt':1}
+            }, sort=[('value', pymongo.DESCENDING)], limit=100))
             db.results.insert({
                 'source_id': self.data['_id']
                 , 'project_id': self.data['project_id']
                 , 'label': self.data['label']
                 , 'date': data['date']
                 , 'value': data['normalized']
+                , 'words': [{'term':word['term'], 'value':word['count']} for word in words]
             })
     
     @classmethod
