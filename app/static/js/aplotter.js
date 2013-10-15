@@ -16,7 +16,6 @@ var margin = {top: 50, right: 80, bottom: 50, left: 80},
 $(window).load(function() {
   //adjustElements();
   buttonSwitcher();
-  //wordClouds();
   giveCredit();
 });
 
@@ -45,6 +44,14 @@ var svg = d3.select('#vis').append('svg')
   .append('g')
     .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
+var aplotterTimestampToDate = function (d) {
+  date = new Date(d * 1000);
+  var y = date.getFullYear();
+  var m = date.getMonth() + 1;
+  var mday = date.getDate();
+  return m + '/' + mday;
+};
+
 // d3 MAIN FUNCTION (starts by reading data from the mediacsv file)
 var plotData = function(mediaS) {
 
@@ -69,13 +76,7 @@ var plotData = function(mediaS) {
   color.domain(mediaH);
 
   // sets x- and y-axis dimensions
-  x0.domain(dates.map(function (d) {
-    date = new Date(d * 1000);
-    var y = date.getFullYear();
-    var m = date.getMonth() + 1;
-    var mday = date.getDate();
-    return m + '/' + mday;
-  }));
+  x0.domain(dates.map(aplotterTimestampToDate));
   x1.domain(mediaH).rangeRoundBands([0, x0.rangeBand()]);
   var layerMax = function(layer) {
     return d3.max(layer.values, function(d) { return d.value; });
@@ -104,6 +105,7 @@ var plotData = function(mediaS) {
       .data(dataByDate)
     .enter().append('g')   // create svg group (g) for every date
       .attr('class', 'g date')
+      .attr('id', function(d) { return 'graph-dategroup-' + d['date']; })
       .attr('transform', function(d) { return 'translate(' + x0(d.date) + ',0)'; });
   
   // generates x axis 'platforms' for bars over each date
@@ -242,46 +244,77 @@ function buttonSwitcher() {
 }
 
 //Adds word cloud popovers on the timeline dates
-function wordClouds() {
+function wordClouds(data) {
 
-  // parses wordscsv and creates new popovers containing word clouds logscaled to their counts
-  d3.csv(wordscsv, function(d) { 
-    var wordcloud = '';
-    var wordmax = 50; // max # of words to allow in wordcloud
-    var wordnum = 0;
-    var lastdate = d[0].date; // used to group words on the same date
+  var wordcloud = '';
+  var wordmax = 50; // max # of words to allow in wordcloud
+  var wordnum = 0;
+  //var lastdate = d[0].date; // used to group words on the same date
 
-    for(var i = 0; i < d.length; i++)
-    {
-      if(d[i].date == lastdate) {
-        if(wordnum <= wordmax) {  
-          var size = Math.log(d[i].magnitude)*4;
-          if (size >= 4) {        // ignore words too insignificant to even be readable
-            wordcloud = wordcloud + '<span style="font-size:' + size + 'px">' + d[i].word + '</span> ';
-            wordnum = wordnum+1;
-          }
+  $.each(data, function (layerIndex, layer) {
+    // Create a word cloud for each date in this layer
+    $.each(layer['values'], function (dIndex, d) {
+      var wordcloud = '';
+      var wordnum = 0;
+      var date = Number(d['date']);
+      // Add each word to its word cloud
+      $.each(d['words'], function (wordIndex, word) {
+        // Calculate the size of the word, ignoring small ones
+        var size = Math.log(word['value'])*4;
+        if (size >= 4) {
+          wordcloud = wordcloud + '<span style="font-size:' + size + 'px">' + word['term'] + '</span> ';
         }
-      } else {
-        if (wordcloud != "") {    // ignore empty word clouds to preserve "insufficient data" popovers
-          if ($('.tick.major:contains("' + lastdate + '")').popover('getData') != null) {
-            $('.tick.major:contains("' + lastdate + '")').popover('destroy');   // delete exiting popovers
-          }
-
-          $('.tick.major:contains("' + lastdate + '")').popover({
-            'title': lastdate,
-            'content': wordcloud,
-            'position': 'top',
-            'trigger': 'hover'
-          });
+      });
+      // Add the wordcloud to the document
+      if (wordcloud != "") {    // ignore empty word clouds to preserve "insufficient data" popovers
+        console.log('#graph-dategroup-' + date + ' .bar' + layerIndex);
+        var attachTo = $('#graph-dategroup-' + date + ' .bar' + layerIndex);
+        // Delete any existing popovers
+        if (attachTo.popover('getData') != null) {
+          attachTo.popover('destroy');
         }
-        wordcloud = '';
-        wordnum = 0;
-        lastdate = d[i].date;
+        // Add the new popover
+        $(attachTo).popover({
+          'title': aplotterTimestampToDate(date),
+          'content': wordcloud,
+          'position': 'top',
+          'trigger': 'hover'
+        });
       }
-    }
-
-    window.setTimeout(emptyPopovers(), 1);
+    });
   });
+  
+  /*
+  for(var i = 0; i < d.length; i++)
+  {
+    if(d[i].date == lastdate) {
+      if(wordnum <= wordmax) {  
+        var size = Math.log(d[i].magnitude)*4;
+        if (size >= 4) {        // ignore words too insignificant to even be readable
+          wordcloud = wordcloud + '<span style="font-size:' + size + 'px">' + d[i].word + '</span> ';
+          wordnum = wordnum+1;
+        }
+      }
+    } else {
+      if (wordcloud != "") {    // ignore empty word clouds to preserve "insufficient data" popovers
+        if ($('.tick.major:contains("' + lastdate + '")').popover('getData') != null) {
+          $('.tick.major:contains("' + lastdate + '")').popover('destroy');   // delete exiting popovers
+        }
+
+        $('.tick.major:contains("' + lastdate + '")').popover({
+          'title': lastdate,
+          'content': wordcloud,
+          'position': 'top',
+          'trigger': 'hover'
+        });
+      }
+      wordcloud = '';
+      wordnum = 0;
+      lastdate = d[i].date;
+    }
+  }
+  */
+  //window.setTimeout(emptyPopovers(), 1);
 }
 
 // Loads empty popovers for dates without wordclouds
