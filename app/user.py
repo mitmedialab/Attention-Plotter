@@ -31,3 +31,18 @@ def authenticate_user(email, password):
     flash('Invalid username/password combination.')
     return AnonymousUserMixin()
 
+def add_user(username, email, password):
+    global db
+    # Make sure user and email are not currently taken
+    u = db.users.find({'username':username})
+    e = db.users.find({'email':email})
+    if u.count() > 0 or e.count() > 0:
+        print "Username or email already taken"
+    else:
+        hash = hashlib.sha1(password).hexdigest()
+        db.users.insert({
+            'email': email
+            , 'hash': hash
+            , 'username': username
+        })
+    
