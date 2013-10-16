@@ -25,7 +25,7 @@ var x0 = d3.scale.ordinal()
 var x1 = d3.scale.ordinal();
 
 var y = d3.scale.linear()
-    .range([height, 0]);
+    .rangeRound([height, 0]);
 
 var color = d3.scale.category10();
 
@@ -115,9 +115,9 @@ var plotData = function(mediaS) {
       .attr('class','platform')
       .attr('stroke-width', '1')
       .attr('stroke', 'black')
-      .attr('x1', function (d) { return x1(d) + 0.5; })
+      .attr('x1', function (d) { return x1(d); })
       .attr('y1', height + 0.5)
-      .attr('x2', function (d) { return x1(d) + 0.5 + x1.rangeBand(); })
+      .attr('x2', function (d) { return x1(d) + x1.rangeBand(); })
       .attr('y2', height + 0.5);
 
   // creates bars
@@ -127,8 +127,8 @@ var plotData = function(mediaS) {
       .attr('class', function(d) { return 'bar' + mediaH.indexOf(d.name); }) // index on array
       .style('fill', function(d) { return color(d.name); })
       .attr('width', x1.rangeBand())
-      .attr('x', function(d) { return x1(d.name) + 0.5; })
-      .attr('y', function(d) { return y(d.value.value)-1; })
+      .attr('x', function(d) { return x1(d.name); })
+      .attr('y', function(d) { return y(d.value.value) - 1; })
       .attr('height', function(d) { return height - y(d.value.value); });
 
   // creates legend
