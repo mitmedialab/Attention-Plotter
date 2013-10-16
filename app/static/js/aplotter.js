@@ -283,51 +283,6 @@ function wordClouds(data) {
       }
     });
   });
-  
-  /*
-  for(var i = 0; i < d.length; i++)
-  {
-    if(d[i].date == lastdate) {
-      if(wordnum <= wordmax) {  
-        var size = Math.log(d[i].magnitude)*4;
-        if (size >= 4) {        // ignore words too insignificant to even be readable
-          wordcloud = wordcloud + '<span style="font-size:' + size + 'px">' + d[i].word + '</span> ';
-          wordnum = wordnum+1;
-        }
-      }
-    } else {
-      if (wordcloud != "") {    // ignore empty word clouds to preserve "insufficient data" popovers
-        if ($('.tick.major:contains("' + lastdate + '")').popover('getData') != null) {
-          $('.tick.major:contains("' + lastdate + '")').popover('destroy');   // delete exiting popovers
-        }
-
-        $('.tick.major:contains("' + lastdate + '")').popover({
-          'title': lastdate,
-          'content': wordcloud,
-          'position': 'top',
-          'trigger': 'hover'
-        });
-      }
-      wordcloud = '';
-      wordnum = 0;
-      lastdate = d[i].date;
-    }
-  }
-  */
-  //window.setTimeout(emptyPopovers(), 1);
-}
-
-// Loads empty popovers for dates without wordclouds
-function emptyPopovers() {
-  $.each($('.tick.major'), function() {
-    if ($(this).popover('getData') == null ) {
-      $(this).popover({
-        'content': '<span style="font-style:italic;">insufficient data</span>',
-        'position': 'top',
-        'trigger': 'hover'
-      });
-    }
-  });
 }
 
 // Adds credit span to #description + popover
