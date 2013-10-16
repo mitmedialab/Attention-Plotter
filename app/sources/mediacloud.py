@@ -82,7 +82,7 @@ class MediaCloud(Source):
             words = list(db.words.find({
                 'source_id':self.data['_id']
                 , 'date':data['date']
-                , 'value':{'$gt':1}
+                , 'count':{'$gt':1}
             }, sort=[('value', pymongo.DESCENDING)], limit=100))
             db.results.insert({
                 'source_id': self.data['_id']
