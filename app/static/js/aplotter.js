@@ -99,6 +99,11 @@ var plotData = function(mediaS) {
           //return 'translate(' + this.getBBox().height*-0.5 + ',' + this.getBBox().height*0.5 + ')rotate(-45)'; // angled
           return 'translate(' + this.getBBox().height*-1.1 + ',' + this.getBBox().height*0.9 + ')rotate(-90)'; // vertical
       });
+      
+  // Add custom class to x axis labels
+  $('.x.axis .tick.major').each(function (i, d) {
+    d3.select(d).classed('date-' + dates[i], true);
+  });
 
   // instantiates media.csv data
   var mediumH = svg.selectAll('.date')
@@ -267,8 +272,7 @@ function wordClouds(data) {
       });
       // Add the wordcloud to the document
       if (wordcloud != "") {    // ignore empty word clouds to preserve "insufficient data" popovers
-        console.log('#graph-dategroup-' + date + ' .bar' + layerIndex);
-        var attachTo = $('#graph-dategroup-' + date + ' .bar' + layerIndex);
+        var attachTo = $('.date-' + date);
         // Delete any existing popovers
         if (attachTo.popover('getData') != null) {
           attachTo.popover('destroy');
