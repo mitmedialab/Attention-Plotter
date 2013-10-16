@@ -117,7 +117,7 @@ var plotData = function(mediaS) {
       .attr('stroke', 'black')
       .attr('x1', function (d) { return x1(d) + 0.5; })
       .attr('y1', height + 0.5)
-      .attr('x2', function (d) { return x1(d) + 0.5 + x1.rangeBand() + 0.5; })
+      .attr('x2', function (d) { return x1(d) + 0.5 + x1.rangeBand(); })
       .attr('y2', height + 0.5);
 
   // creates bars
@@ -127,7 +127,7 @@ var plotData = function(mediaS) {
       .attr('class', function(d) { return 'bar' + mediaH.indexOf(d.name); }) // index on array
       .style('fill', function(d) { return color(d.name); })
       .attr('width', x1.rangeBand())
-      .attr('x', function(d) { return x1(d.name); })
+      .attr('x', function(d) { return x1(d.name) + 0.5; })
       .attr('y', function(d) { return y(d.value.value)-1; })
       .attr('height', function(d) { return height - y(d.value.value); });
 
