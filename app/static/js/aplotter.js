@@ -8,7 +8,7 @@ var graphwidth = 2000;
 var graphheight = 400;
 
 // d3 params and helper functions
-var margin = {top: 50, right: 80, bottom: 50, left: 80},
+var margin = {top: 0, right: 0, bottom: 50, left: 0},
     width = graphwidth - margin.left - margin.right,
     height = graphheight - margin.top - margin.bottom;
 
@@ -20,7 +20,7 @@ $(window).load(function() {
 });
 
 var x0 = d3.scale.ordinal()
-    .rangeRoundBands([0, width], .1);
+    .rangeRoundBands([0, width], 0.1, 0);
 
 var x1 = d3.scale.ordinal();
 
@@ -35,7 +35,7 @@ var xAxis = d3.svg.axis()
 
 var line = d3.svg.line()
     .interpolate('monotone')
-    .x(function(d) { return x0(d.date)+(x1.rangeBand()*(color.range().length-3)/2); }) // uses color index to capture # of media types
+    .x(function(d) { return x0(d.date)-x0offset+(x1.rangeBand()*(color.range().length-3)/2); }) // uses color index to capture # of media types
     .y(function(d) { return y(d.value); });
 
 var svg = d3.select('#vis').append('svg')
@@ -77,6 +77,7 @@ var plotData = function(mediaS) {
 
   // sets x- and y-axis dimensions
   x0.domain(dates.map(aplotterTimestampToDate));
+  x0offset = x0(aplotterTimestampToDate(dates[0]));
   x1.domain(mediaH).rangeRoundBands([0, x0.rangeBand()]);
   var layerMax = function(layer) {
     return d3.max(layer.values, function(d) { return d.value; });
@@ -86,7 +87,7 @@ var plotData = function(mediaS) {
   // creates x-axis
   svg.append('g')
       .attr('class', 'x axis')
-      .attr('transform', 'translate(0,' + height + ')')
+      .attr('transform', 'translate(' + (-x0offset) + ',' + height + ')')
       .call(xAxis);
   d3.selectAll('.x.axis .tick line')
     .attr('stroke', 'black');
@@ -111,7 +112,7 @@ var plotData = function(mediaS) {
     .enter().append('g')   // create svg group (g) for every date
       .attr('class', 'g date')
       .attr('id', function(d) { return 'graph-dategroup-' + d['date']; })
-      .attr('transform', function(d) { return 'translate(' + x0(d.date) + ',0)'; });
+      .attr('transform', function(d) { return 'translate(' + (x0(d.date) - x0offset) + ',0)'; });
   
   // generates x axis 'platforms' for bars over each date
   mediumH.selectAll('line.platform')
@@ -137,46 +138,38 @@ var plotData = function(mediaS) {
       .attr('height', function(d) { return height - y(d.value.value); });
 
   // creates legend
-  var legendHeight = 25*(color.range().length-3); // height varies by number of legend items
-  var legendWidth = 500;
-
-  var legend = d3.select('#legend').append('svg')
-      .attr('width', legendWidth)
-      .attr('height', legendHeight);
-
-  var legenditem = legend.selectAll('g')
+  var legend = d3.select('#legend');
+  var legenditem = legend.selectAll('.item')
       .data(mediaH.slice())
-    .enter().append('g')
-      .attr('transform', function(d, i) { return 'translate(0,' + i * 20 + ')'; });
+    .enter().append('span')
+      .attr('class', 'item');
 
-  legenditem.append('rect')
-      .attr('class', function(d) { return 'lbox' + mediaH.indexOf(d); } ) // index on array
-      .attr('x', 0)
-      .attr('width', 18)
-      .attr('height', 18)
-      .style('fill', color)
+  legenditem.append('div')
+      .attr('class', function(d) { return 'legend-item lbox' + mediaH.indexOf(d) + ' active'; } ) // index on array
+      .style('width', '20px')
+      .style('height', '20px')
+      .style('display', 'inline-block')
+      .style('vertical-align', 'bottom')
+      .style('background', color)
       .on('click',function(d) { 
         var classnum = mediaH.indexOf(d);
-        if(d3.select('#legend text.ltext'+classnum).attr('class')==='ltext'+classnum) {
-          d3.selectAll('#vis rect.bar'+classnum).transition().duration(0).attr('opacity',0.15).style('fill', '#000');
-          d3.selectAll('#vis path.line'+classnum).transition().duration(0).attr('opacity',0.15).style('stroke', '#000');
-          d3.select(this).transition().duration(0).attr('opacity',0.15).style('fill', '#000');
-          d3.select('#legend text.ltext'+classnum).transition().duration(0).attr('class','ltext'+classnum+' off');
+        if(d3.select('#legend div.lbox'+classnum).classed('active')) {
+          d3.selectAll('#vis rect.bar'+classnum).transition(100).attr('opacity',0.15).style('fill', '#000');
+          d3.selectAll('#vis path.line'+classnum).transition(100).attr('opacity',0.15).style('stroke', '#000');
+          d3.select(this).transition(100).style('opacity',0.15).style('background', '#000');
+          d3.select('#legend div.lbox'+classnum).classed('active', false);
         } else {
-          d3.selectAll('#vis rect.bar'+classnum).transition().duration(0).attr('opacity',1).style('fill', color(d));
-          d3.selectAll('#vis path.line'+classnum).transition().duration(0).attr('opacity',1).style('stroke', color(d));
-          d3.select(this).transition().duration(0).attr('opacity',1).style('fill', color(d));
-          d3.select('#legend text.ltext'+classnum).transition().duration(0).attr('class','ltext'+classnum);
+          d3.selectAll('#vis rect.bar'+classnum).transition(100).attr('opacity',1).style('fill', color(d));
+          d3.selectAll('#vis path.line'+classnum).transition(100).attr('opacity',1).style('stroke', color(d));
+          d3.select(this).transition(100).style('opacity',1).style('background', color(d));
+          d3.select('#legend div.lbox'+classnum).classed('active', true);
         }
       });
-
-  legenditem.append('text')
-      .attr('class', function(d) { return 'ltext' + mediaH.indexOf(d); } ) // index on array
-      .attr('x', 24)
-      .attr('y', 9)
-      .attr('dy', '.35em')
-      .style('text-anchor', 'start')
-      .text(function(d) { return d; });
+  
+  legenditem.append('span')
+      .attr('class', function(d) { return 'legend-label ltext' + mediaH.indexOf(d); } ) // index on array
+      .style('margin-right', '15px')
+      .text(function(d) { return ' ' + d; });
 
   // creates sparklines
   var mediumS = svg.selectAll('.mediumS')
