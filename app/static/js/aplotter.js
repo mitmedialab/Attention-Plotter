@@ -35,7 +35,7 @@ var xAxis = d3.svg.axis()
 
 var line = d3.svg.line()
     .interpolate('monotone')
-    .x(function(d) { return x0(d.date)-x0offset+(x1.rangeBand()*(color.range().length-3)/2); }) // uses color index to capture # of media types
+    .x(function(d) { return x0(d.date)-x0offset+Math.floor(x0.rangeBand()/2); }) // uses color index to capture # of media types
     .y(function(d) { return y(d.value); });
 
 var svg = d3.select('#vis').append('svg')
