@@ -2,6 +2,7 @@ from __future__ import division
 
 import datetime
 import json
+import math
 import pymongo
 import time
 import urllib
@@ -74,20 +75,31 @@ class MediaCloud(Source):
     def transform(self):
         """Transform raw data"""
         project = db.projects.find_one({'_id': self.data['project_id']})
+        start_date = datetime.datetime.strptime(project['start'], '%Y-%m-%d')
+        end_date = datetime.datetime.strptime(project['end'], '%Y-%m-%d')
+        # Normalize counts
         counts = list(db.raw.find({'source_id': self.data['_id']}))
         max_count = max([int(data['numFound']) for data in counts])
         for data in counts:
             data['normalized'] = float(data['numFound']) / max_count
         db.transformed.insert(counts)
+        # TF-IDF related terms
+        words = list(db.words.find({'source_id': self.data['_id']}))
+        doc_count = {}
+        total = (end_date - start_date).days + 1
+        for word in words:
+            doc_count[word['term']] = doc_count.get(word['term'],0) + 1
+        for word in words:
+            word['tfidf'] = word['count'] * math.log(total / doc_count[word['term']])
+            db.transformedwords.insert(word)
     
     def load(self):
         """Create json results formatted for d3 use."""
         for data in db.transformed.find({'source_id':self.data['_id']}):
-            words = list(db.words.find({
+            words = list(db.transformedwords.find({
                 'source_id':self.data['_id']
                 , 'date':data['date']
-                , 'count':{'$gt':1}
-            }, sort=[('value', pymongo.DESCENDING)], limit=100))
+            }, sort=[('tfidf', pymongo.DESCENDING)], limit=100))
             db.results.insert({
                 'source_id': self.data['_id']
                 , 'project_id': self.data['project_id']
@@ -95,7 +107,7 @@ class MediaCloud(Source):
                 , 'date': data['date']
                 , 'value': data['normalized']
                 , 'raw': data['numFound']
-                , 'words': [{'term':word['term'], 'value':word['count']} for word in words]
+                , 'words': [{'term':word['term'], 'value':word['tfidf']} for word in words]
             })
     
     @classmethod
