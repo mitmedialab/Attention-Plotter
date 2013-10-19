@@ -90,6 +90,7 @@ class MediaCloud(Source):
                 , 'label': self.data['label']
                 , 'date': data['date']
                 , 'value': data['normalized']
+                , 'raw': data['numFound']
                 , 'words': [{'term':word['term'], 'value':word['count']} for word in words]
             })
     

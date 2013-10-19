@@ -43,6 +43,7 @@ var svg = d3.select('#vis').append('svg')
     .attr('height', height + margin.top + margin.bottom)
   .append('g')
     .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+var svgBg = svg.append('g').attr('class', 'bg');
 
 var aplotterTimestampToDate = function (d) {
   date = new Date(d * 1000);
@@ -126,16 +127,64 @@ var plotData = function(mediaS) {
       .attr('x2', function (d) { return x1(d) + x1.rangeBand(); })
       .attr('y2', height + 0.5);
 
+  // Create count label and reference line
+  countShadow = svg.append('text').text('0')
+    .attr('fill', 'white')
+    .attr('stroke', 'white')
+    .attr('stroke-width', '2')
+    .attr('font-weight', 'bold')
+    .attr('opacity', '0');
+  countLabel = svg.append('text').text('0')
+    .attr('opacity', '0');
+  countLine = svgBg.append('line')
+    .attr('stroke', '#ccc')
+    .attr('x1', 0).attr('x2', width - 2*x0offset)
+    .attr('y1', 0).attr('y2', 0)
+    .attr('opacity', 0);
+      
   // creates bars
-  mediumH.selectAll('rect')
-      .data(function(d) { return d.media; })
+  var bars = mediumH.selectAll('rect')
+      .data(function(d) { return d.media; });
+  bars
     .enter().append('rect')
-      .attr('class', function(d) { return 'bar' + mediaH.indexOf(d.name); }) // index on array
+      .attr('class', function(d) { return 'active bar' + mediaH.indexOf(d.name); }) // index on array
       .style('fill', function(d) { return color(d.name); })
       .attr('width', x1.rangeBand())
       .attr('x', function(d) { return x1(d.name); })
       .attr('y', function(d) { return y(d.value.value) - 1; })
       .attr('height', function(d) { return height - y(d.value.value); });
+  bars
+    .on('mouseover', function (d) {
+      if (d3.select(this).classed('active')) {
+        d3.select(this).attr('opacity', 0.75);
+        countShadow.text(d.value.raw);
+        countLabel.text(d.value.raw);
+        var lx = x0(aplotterTimestampToDate(d.value.date)) - x0offset + x1(d.name);
+        var ly = y(d.value.value) - 0.5;
+        countLine.attr('y1', ly).attr('y2', ly);
+        countLine.attr('opacity', 1);
+        if (lx > width/2) {
+          lx = lx - countLabel[0][0].getBBox().width - 2;
+        } else {
+          lx = lx + x1.rangeBand() + 2;
+        }
+        if (ly > height/2) {
+          ly = ly - 5;
+        } else {
+          ly = ly  + 10 + 5;
+        }
+        countShadow.attr('x', lx).attr('y', ly).attr('opacity', 1)
+        countLabel.attr('x', lx).attr('y', ly).attr('opacity', 1);
+      }
+    })
+    .on('mouseout', function (d) {
+      if (d3.select(this).classed('active')) {
+        d3.select(this).attr('opacity', 1);
+        countLine.attr('opacity', 0);
+        countShadow.attr('opacity', 0);
+        countLabel.attr('opacity', 0);
+      }
+    })
 
   // creates legend
   var legend = d3.select('#legend');
@@ -158,11 +207,13 @@ var plotData = function(mediaS) {
           d3.selectAll('#vis path.line'+classnum).transition(100).attr('opacity',0.15).style('stroke', '#000');
           d3.select(this).transition(100).style('opacity',0.15).style('background', '#000');
           d3.select('#legend div.lbox'+classnum).classed('active', false);
+          d3.selectAll('rect.bar'+classnum).classed('active', false);
         } else {
           d3.selectAll('#vis rect.bar'+classnum).transition(100).attr('opacity',1).style('fill', color(d));
           d3.selectAll('#vis path.line'+classnum).transition(100).attr('opacity',1).style('stroke', color(d));
           d3.select(this).transition(100).style('opacity',1).style('background', color(d));
           d3.select('#legend div.lbox'+classnum).classed('active', true);
+          d3.selectAll('rect.bar'+classnum).classed('active', true);
         }
       });
   

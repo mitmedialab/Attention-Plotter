@@ -85,6 +85,7 @@ class IAClosedCaption(Source):
                 , 'project_id': self.data['project_id']
                 , 'label': self.data['label']
                 , 'date': data['date']
+                , 'raw': data['count']
                 , 'value': data['normalized']
             })
     
