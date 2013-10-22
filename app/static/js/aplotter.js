@@ -137,7 +137,7 @@ var plotData = function(mediaS) {
   countLabel = svg.append('text').text('0')
     .attr('opacity', '0');
   countLine = svgBg.append('line')
-    .attr('stroke', '#ccc')
+    .attr('stroke', '#d7d7d7')
     .attr('x1', 0).attr('x2', width - 2*x0offset)
     .attr('y1', 0).attr('y2', 0)
     .attr('opacity', 0);
