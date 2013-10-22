@@ -191,6 +191,7 @@ var plotData = function(mediaS) {
   var legenditem = legend.selectAll('.item')
       .data(mediaH.slice())
     .enter().append('span')
+      .style('display', 'inline-block')
       .attr('class', 'item');
 
   legenditem.append('div')
