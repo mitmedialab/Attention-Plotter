@@ -104,6 +104,9 @@ def project_settings(username, project_name):
         db.results.remove({'source_id': source_id})
         # Update the source list
         source_list = list(db.sources.find({'project_id':project['_id']}))
+        delete_source_forms = []
+        for source in source_list:
+            delete_source_forms.append(DeleteSourceForm(prefix="delete_source", source_id=source['_id'], source_name=source['label']))
         
     return render_template(
         'project-settings.html'
