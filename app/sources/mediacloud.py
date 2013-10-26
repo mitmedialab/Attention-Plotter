@@ -59,7 +59,6 @@ class MediaCloud(Source):
                 , 'date': time.mktime(date.timetuple())
             })
             db.raw.insert(result)
-            date += delta
             # Query related words
             url = 'http://mcquery1.media.mit.edu:8080/wc?%s' % (query)
             count_result = json.loads(urllib2.urlopen(url).read())
@@ -71,6 +70,8 @@ class MediaCloud(Source):
                     , 'date': time.mktime(date.timetuple())
                 })
                 db.words.insert(word)
+            # Increment the date
+            date += delta
     
     def transform(self):
         """Transform raw data"""

@@ -47,7 +47,7 @@ var svgBg = svg.append('g').attr('class', 'bg');
 
 var aplotterTimestampToDate = function (d) {
   var offset = (new Date()).getTimezoneOffset() * 60 * 1000;
-  date = new Date(d * 1000 - offset + 1000);
+  date = new Date(d * 1000);
   var y = date.getFullYear();
   var m = date.getMonth() + 1;
   var mday = date.getDate();
