@@ -16,6 +16,10 @@ class NewProjectForm(Form):
 
 class DeleteProjectForm(Form):
     name = TextField('Name', [validators.Required()])
+    
+class DeleteSourceForm(Form):
+    source_id = HiddenField('Source ID', [validators.Required()])
+    source_name = HiddenField('Name')
 
 class AddSourceTypeForm(Form):
     source_type = SelectField('Source Type', choices=[(source, source) for source in Source.sources.keys()])

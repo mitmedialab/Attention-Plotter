@@ -1,3 +1,4 @@
+import bson
 import json
 from bson import json_util
 
@@ -8,7 +9,7 @@ import pymongo
 from app import app, login_manager, db, TaskStatus
 from app.sources.source import Source
 from user import User, authenticate_user
-from forms import LoginForm, DeleteProjectForm, NewProjectForm, AddSourceTypeForm, make_source_form
+from forms import LoginForm, DeleteProjectForm, NewProjectForm, AddSourceTypeForm, DeleteSourceForm, make_source_form
 
 @app.route('/')
 def index():
@@ -78,6 +79,9 @@ def project_settings(username, project_name):
         abort(403)
     project = db.projects.find_one({'name':project_name, 'owner':username})
     source_list = list(db.sources.find({'project_id':project['_id']}))
+    delete_source_forms = []
+    for source in source_list:
+        delete_source_forms.append(DeleteSourceForm(prefix="delete_source", source_id=source['_id'], source_name=source['label']))
     delete_form = DeleteProjectForm(prefix="delete")
     if delete_form.validate_on_submit():
         if project_name == delete_form.name.data:
@@ -89,12 +93,25 @@ def project_settings(username, project_name):
     add_type_form = AddSourceTypeForm(prefix="add_source_type")
     if not add_type_form.source_type.data == 'None':
         return redirect(url_for('add_source', username=username, project_name=project_name, source_name=add_type_form.source_type.data))
+    delete_source_form = DeleteSourceForm(prefix="delete_source")
+    if delete_source_form.validate_on_submit():
+        # Delete data associated with that source
+        source_id = bson.objectid.ObjectId(delete_source_form.source_id.data)
+        db.sources.remove({'_id': source_id})
+        db.raw.remove({'source_id': source_id})
+        db.transformed.remove({'source_id': source_id})
+        db.words.remove({'source_id': source_id})
+        db.results.remove({'source_id': source_id})
+        # Update the source list
+        source_list = list(db.sources.find({'project_id':project['_id']}))
+        
     return render_template(
         'project-settings.html'
         , project=project
         , delete_form=delete_form
         , add_type_form=add_type_form
-        , sources=source_list)
+        , sources=source_list
+        , delete_source_forms=delete_source_forms)
 
 @app.route('/<username>/<project_name>/add-source/<source_name>', methods=['GET', 'POST'])
 @login_required
@@ -113,7 +130,7 @@ def add_source(username, project_name, source_name):
         , project=project
         , source_name=source_name
         , create_form=create_form)
-    
+
 @app.route('/new-project', methods=['GET', 'POST'])
 @login_required
 def new_project():

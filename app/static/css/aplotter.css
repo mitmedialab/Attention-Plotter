@@ -20,6 +20,10 @@
     display: inline-block;
 }
 
+.modal-footer .form-inline {
+    margin-bottom: 0;
+}
+
 /* Override Popover.css Defaults w/ Bootstrap Defaults */
 .popover {
   z-index: 1010;
