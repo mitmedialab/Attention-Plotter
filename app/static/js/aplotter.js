@@ -8,7 +8,7 @@ var graphwidth = 2000;
 var graphheight = 400;
 
 // d3 params and helper functions
-var margin = {top: 0, right: 0, bottom: 50, left: 0},
+var margin = {top: 20, right: 0, bottom: 50, left: 0},
     width = graphwidth - margin.left - margin.right,
     height = graphheight - margin.top - margin.bottom;
 
@@ -163,16 +163,7 @@ var plotData = function(mediaS) {
         var ly = y(d.value.value) - 0.5;
         countLine.attr('y1', ly).attr('y2', ly);
         countLine.attr('opacity', 1);
-        if (lx > width/2) {
-          lx = lx - countLabel[0][0].getBBox().width - 2;
-        } else {
-          lx = lx + x1.rangeBand() + 2;
-        }
-        if (ly > height/2) {
-          ly = ly - 5;
-        } else {
-          ly = ly  + 10 + 5;
-        }
+        ly = ly - 5;
         countShadow.attr('x', lx).attr('y', ly).attr('opacity', 1)
         countLabel.attr('x', lx).attr('y', ly).attr('opacity', 1);
       }
