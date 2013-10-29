@@ -1,5 +1,6 @@
 from __future__ import division
 
+import calendar
 import datetime
 import json
 import math
@@ -39,6 +40,7 @@ class MediaCloud(Source):
         delta = datetime.timedelta(days=1)
         # Loop through each date
         while date <= end_date:
+            timestamp = calendar.timegm(date.timetuple())
             # Generate the query params
             fq = "publish_date:[%sT00:00:00Z TO %sT00:00:00Z] AND +media_sets_id:%s" % (
                 date.strftime('%Y-%m-%d')
@@ -56,7 +58,7 @@ class MediaCloud(Source):
             result = self.xml_to_result(urllib2.urlopen(url).read())
             result.update({
                 'source_id': self.data['_id']
-                , 'date': time.mktime(date.timetuple())
+                , 'date': timestamp
             })
             db.raw.insert(result)
             # Query related words
@@ -67,7 +69,7 @@ class MediaCloud(Source):
                     continue
                 word.update({
                     'source_id': self.data['_id']
-                    , 'date': time.mktime(date.timetuple())
+                    , 'date': timestamp
                 })
                 db.words.insert(word)
             # Increment the date
