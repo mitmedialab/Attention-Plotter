@@ -21,7 +21,6 @@
 <script src="/static/js/aplotter.js"></script>
 <script type="text/javascript">
     data = {{ data|safe }};
-    plotData(data);
-    wordClouds(data);
+    AttentionPlotter.createGraph(data);
 </script>
 {% endblock %}
