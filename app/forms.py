@@ -24,6 +24,10 @@ class DeleteSourceForm(Form):
 class AddSourceTypeForm(Form):
     source_type = SelectField('Source Type', choices=[(source, source) for source in Source.sources.keys()])
 
+class AddEventForm(Form):
+    event_label = TextField('Label', [validators.Required()])
+    event_date = TextField('Date', [validators.Required()])
+
 def make_source_form(project):
     class SourceForm(Form):
         method = HiddenField()

@@ -5,6 +5,7 @@
 <ul class="nav nav-tabs">
     <li class="active"><a href="#info" data-toggle="tab">Basic info</a></li>
     <li><a href="#sources" data-toggle="tab">Sources</a></li>
+    <li><a href="#events" data-toggle="tab">Events</a></li>
     <li><a href="#delete" data-toggle="tab">Delete</a></li>
 </ul>
 <div class="tab-content" id="settings-tab">
@@ -29,28 +30,62 @@
                 </div>
             </fieldset>
         </form>
-        <table class="table">
-            <thead>
-                <tr>
+        {% if sources|length > 0 %}
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Label</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for source in sources %}
+                    <tr>
+                        <td>{{ source['label'] }}</td>
+                        <td>{{ source['type'] }}</td>
+                        <td>{{ source['status'] }}</td>
+                        <td>
+                            <a href="#delete-modal-{{ source['_id'] }}" role="button" data-toggle="modal">delete</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>This project has no data sources added yet.</p>
+        {% endif %}
+    </div>
+    <div class="tab-pane" id="events">
+        <h3>Events</h3>
+        <form method="post" action="/{{ project.owner }}/{{ project.name }}/settings">
+            {{ render_field(add_event_form.event_label) }}
+            {{ render_field(add_event_form.event_date, class="datepicker") }}
+            <fieldset>
+                {{ render_field(add_event_form.csrf_token) }}
+                <button type="submit" class="btn btn-primary">Add</button>
+            </fieldset>
+        </form>
+        {% if events|length > 0 %}
+            <table class="table">
+                <thead>
+                    <th>Date</th>
                     <th>Label</th>
-                    <th>Type</th>
-                    <th>Status</th>
                     <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for source in sources %}
-                <tr>
-                    <td>{{ source['label'] }}</td>
-                    <td>{{ source['type'] }}</td>
-                    <td>{{ source['status'] }}</td>
-                    <td>
-                        <a href="#delete-modal-{{ source['_id'] }}" role="button" data-toggle="modal">delete</a>
-                    </td>
-                </tr>
+                </thead>
+                <tbody>
+                {% for event in events %}
+                    <tr>
+                        <td>{{ event['date'] }}</td>
+                        <td>{{ event['label'] }}</td>
+                    </tr>
                 {% endfor %}
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        {% else %}
+            <p>This project has no events added yet.</p>
+        {% endif %}
     </div>
     <div class="tab-pane" id="delete">
         <h3>Delete Project</h3>

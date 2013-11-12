@@ -9,7 +9,7 @@ import pymongo
 from app import app, login_manager, db, TaskStatus
 from app.sources.source import Source
 from user import User, authenticate_user
-from forms import LoginForm, DeleteProjectForm, NewProjectForm, AddSourceTypeForm, DeleteSourceForm, make_source_form
+from forms import LoginForm, DeleteProjectForm, NewProjectForm, AddSourceTypeForm, AddEventForm, DeleteSourceForm, make_source_form
 
 @app.route('/')
 def index():
@@ -93,6 +93,13 @@ def project_settings(username, project_name):
     add_type_form = AddSourceTypeForm(prefix="add_source_type")
     if not add_type_form.source_type.data == 'None':
         return redirect(url_for('add_source', username=username, project_name=project_name, source_name=add_type_form.source_type.data))
+    add_event_form = AddEventForm(prefix="add_event")
+    if add_event_form.validate_on_submit():
+        db.events.insert({
+            'project_id': project['_id']
+            , 'label': add_event_form.event_label.data
+            , 'date': add_event_form.event_date.data
+        });
     delete_source_form = DeleteSourceForm(prefix="delete_source")
     if delete_source_form.validate_on_submit():
         # Delete data associated with that source
@@ -107,12 +114,14 @@ def project_settings(username, project_name):
         delete_source_forms = []
         for source in source_list:
             delete_source_forms.append(DeleteSourceForm(prefix="delete_source", source_id=source['_id'], source_name=source['label']))
-        
+    events = list(db.events.find({'project_id': project['_id']}, sort=[('date', pymongo.ASCENDING)]))
     return render_template(
         'project-settings.html'
         , project=project
+        , events=events
         , delete_form=delete_form
         , add_type_form=add_type_form
+        , add_event_form=add_event_form
         , sources=source_list
         , delete_source_forms=delete_source_forms)
 
