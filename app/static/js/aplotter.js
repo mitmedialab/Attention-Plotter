@@ -7,6 +7,7 @@ AttentionPlotter = {
   // Dimensions of the graph
   graphwidth: 2000,
   graphheight: 400,
+  eventheight: 100,
 
   // d3 params and helper functions
   margin: {
@@ -15,6 +16,7 @@ AttentionPlotter = {
     bottom: 50,
     left: 0
   },
+  x0padding: 0.1,
 
   timestampToDate: function (d) {
     date = new Date(d * 1000);
@@ -25,11 +27,12 @@ AttentionPlotter = {
   },
   
   // Set up graph on page load
-  createGraph: function (data) {
+  createGraph: function (data, events) {
+    that = this;
     this.width = this.graphwidth - this.margin.left - this.margin.right;
     this.height = this.graphheight - this.margin.top - this.margin.bottom;
     // d3 scales and axes
-    this.x0 = d3.scale.ordinal().rangeRoundBands([0, this.width], 0.1, 0);
+    this.x0 = d3.scale.ordinal().rangeRoundBands([0, this.width], that.x0padding, 0);
     this.x1 = d3.scale.ordinal();
     this.y = d3.scale.linear().rangeRound([this.height, 0]);
     this.color = d3.scale.category10();
@@ -40,17 +43,21 @@ AttentionPlotter = {
         .y(function(d) { return that.y(d.value); });
     this.svg = d3.select('#vis').append('svg')
         .attr('width', this.width + this.margin.left + this.margin.right)
-        .attr('height', this.height + this.margin.top + this.margin.bottom)
+        .attr('height', this.height + this.eventheight + this.margin.top + this.margin.bottom)
       .append('g')
         .attr('transform', 'translate(' + this.margin.left + ',' + this.margin.top + ')');
     this.svgBg = this.svg.append('g').attr('class', 'bg');
+    this.svg.append('g')
+      .attr('class', 'events')
+      .attr('transform', 'translate(0,' + this.height + ')');
     // Plot the initial data
     this.plotData(data);
+    this.plotEvents(events);
     this.wordClouds(data);
   },
   
   // d3 MAIN FUNCTION (starts by reading data from the mediacsv file)
-  plotData: function(mediaS) {
+  plotData: function(mediaS, events) {
     that = this;
   
     // get layer names
@@ -103,6 +110,8 @@ AttentionPlotter = {
     $('.x.axis .tick.major').each(function (i, d) {
       d3.select(d).classed('date-' + dates[i], true);
     });
+    // Adjust label positions
+    d3.selectAll('.x.axis .tick text').attr('dy', '1em')
   
     // instantiates media.csv data
     var mediumH = this.svg.selectAll('.date')
@@ -224,6 +233,49 @@ AttentionPlotter = {
         .attr('stroke', function(d) { return that.color(d.name); });
         
     that.showBars();
+  },
+  
+  // Plot event markers
+  plotEvents: function (eventData) {
+    var that = this;
+    // Plot the events
+    events = d3.select('.events');
+    event = events.selectAll('.event').data(eventData)
+      .enter().append('g')
+        .attr('class', function (d) { return 'event ' + 'event-' + d.timestamp; })
+        .attr('transform', function (d) {
+          var dx = that.x0(that.timestampToDate(d.timestamp)) - 26.5;
+          var dy = 15 + that.dateLabelHeight(d.timestamp)
+          return 'translate(' + dx + ',' + dy + ')';
+        });
+    event
+      .append('line')
+        .attr('x1', Math.round(that.x0.rangeBand()/2.0))
+        .attr('x2', Math.round(that.x0.rangeBand()/2.0))
+        .attr('y1', 10).attr('y2', 20)
+        .attr('stroke', 'black');
+    event
+      .append('circle')
+        .attr('cx', Math.round(that.x0.rangeBand()/2.0))
+        .attr('cy', 10)
+        .attr('r', 3)
+        .attr('stroke', 'black')
+        .attr('fill', 'white')
+    event
+      .append('g')
+        .attr('transform', function (d) {
+          dx = Math.round(that.x0.rangeBand()/2.0);
+          return 'translate(' + dx + ',25)rotate(30)';
+        })
+        .append('text').text(function (d) { return d.label; })
+        .attr('dx', '0').attr('dy', '0.75em');
+  },
+  
+  // Helper to get height of date label
+  dateLabelHeight: function (timestamp) {
+    var t = d3.select('g.date-' + timestamp + ' text');
+    console.log(t[0][0].getBBox());
+    return t[0][0].getBBox().width;
   },
   
   // Show spark lines and hide bar graph

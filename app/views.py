@@ -1,4 +1,6 @@
 import bson
+import calendar
+import datetime
 import json
 from bson import json_util
 
@@ -9,7 +11,7 @@ import pymongo
 from app import app, login_manager, db, TaskStatus
 from app.sources.source import Source
 from user import User, authenticate_user
-from forms import LoginForm, DeleteProjectForm, NewProjectForm, AddSourceTypeForm, AddEventForm, DeleteSourceForm, make_source_form
+from forms import LoginForm, DeleteProjectForm, NewProjectForm, AddSourceTypeForm, AddEventForm, DeleteSourceForm, DeleteEventForm, make_source_form
 
 @app.route('/')
 def index():
@@ -71,7 +73,8 @@ def project(username, project_name):
             , 'values':[{'date':r['date'], 'value':r['value'], 'raw':r['raw'], 'label':r['label'], 'words':r.get('words', [])} for r in db.results.find(query, fields=fields, sort=[('date', pymongo.ASCENDING)])]
         }
         data.append(source_data)
-    return render_template('project.html', project=project, data=json.dumps(data))
+    events = list(db.events.find({'project_id':project['_id']}, fields= {'_id':False, 'project_id':False, 'date':False}))
+    return render_template('project.html', project=project, data=json.dumps(data), events=json.dumps(events))
 
 @app.route('/<username>/<project_name>/settings', methods=['GET', 'POST'])
 def project_settings(username, project_name):
@@ -81,9 +84,12 @@ def project_settings(username, project_name):
     source_list = list(db.sources.find({'project_id':project['_id']}))
     delete_source_forms = []
     for source in source_list:
-        delete_source_forms.append(DeleteSourceForm(prefix="delete_source", source_id=source['_id'], source_name=source['label']))
+        form = DeleteSourceForm(prefix="delete_source")
+        form.source_id.data = source['_id']
+        form.source_name.data = source['label']
+        delete_source_forms.append(form)
     delete_form = DeleteProjectForm(prefix="delete")
-    if delete_form.validate_on_submit():
+    if delete_form.name.data and delete_form.validate_on_submit():
         if project_name == delete_form.name.data:
             db.projects.remove({'name':delete_form.name.data})
             flash('Project deleted.')
@@ -94,14 +100,17 @@ def project_settings(username, project_name):
     if not add_type_form.source_type.data == 'None':
         return redirect(url_for('add_source', username=username, project_name=project_name, source_name=add_type_form.source_type.data))
     add_event_form = AddEventForm(prefix="add_event")
-    if add_event_form.validate_on_submit():
+    if add_event_form.event_label.data and add_event_form.validate_on_submit():
+        dt = datetime.datetime.strptime(add_event_form.event_date.data, '%Y-%m-%d')
+        timestamp = calendar.timegm(dt.timetuple())
         db.events.insert({
             'project_id': project['_id']
             , 'label': add_event_form.event_label.data
             , 'date': add_event_form.event_date.data
+            , 'timestamp': timestamp
         });
     delete_source_form = DeleteSourceForm(prefix="delete_source")
-    if delete_source_form.validate_on_submit():
+    if delete_source_form.source_id.data and delete_source_form.validate_on_submit():
         # Delete data associated with that source
         source_id = bson.objectid.ObjectId(delete_source_form.source_id.data)
         db.sources.remove({'_id': source_id})
@@ -114,7 +123,17 @@ def project_settings(username, project_name):
         delete_source_forms = []
         for source in source_list:
             delete_source_forms.append(DeleteSourceForm(prefix="delete_source", source_id=source['_id'], source_name=source['label']))
+    delete_event_form = DeleteEventForm(prefix="delete_event")
+    if delete_event_form.event_id.data and delete_event_form.validate_on_submit():
+        event_id = bson.objectid.ObjectId(delete_event_form.event_id.data)
+        db.events.remove({'_id':event_id, 'project_id':project['_id']})
     events = list(db.events.find({'project_id': project['_id']}, sort=[('date', pymongo.ASCENDING)]))
+    delete_event_forms = []
+    for event in events:
+        form = DeleteEventForm(prefix="delete_event")
+        form.event_id.data = event['_id']
+        form.event_label.data = event['label']
+        delete_event_forms.append(form)
     return render_template(
         'project-settings.html'
         , project=project
@@ -123,7 +142,8 @@ def project_settings(username, project_name):
         , add_type_form=add_type_form
         , add_event_form=add_event_form
         , sources=source_list
-        , delete_source_forms=delete_source_forms)
+        , delete_source_forms=delete_source_forms
+        , delete_event_forms=delete_event_forms)
 
 @app.route('/<username>/<project_name>/add-source/<source_name>', methods=['GET', 'POST'])
 @login_required

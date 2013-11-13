@@ -79,6 +79,9 @@
                     <tr>
                         <td>{{ event['date'] }}</td>
                         <td>{{ event['label'] }}</td>
+                        <td>
+                            <a href="#delete-event-modal-{{ event['_id'] }}" role="button" data-toggle="modal">delete</a>
+                        </td>
                     </tr>
                 {% endfor %}
                 </tbody>
@@ -110,6 +113,22 @@
             <button type="submit" class="btn btn-danger">Delete</button>
             {{ render_field(form.csrf_token)}}
             {{ render_field(form.source_id)}}
+        </form>
+    </div>
+</div>
+{% endfor %}
+{% for form in delete_event_forms %}
+<div id="delete-event-modal-{{ form.event_id.data }}" class="modal hide fade" role="dialog">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title">Really delete event: {{ form.event_label.data }}?</h4>
+    </div>
+    <div class="modal-footer">
+        <form class="form-inline" method="post" action="/{{ project.owner }}/{{ project.name }}/settings">
+            <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+            <button type="submit" class="btn btn-danger">Delete</button>
+            {{ render_field(form.csrf_token)}}
+            {{ render_field(form.event_id)}}
         </form>
     </div>
 </div>

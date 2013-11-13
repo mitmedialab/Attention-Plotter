@@ -21,6 +21,10 @@ class DeleteSourceForm(Form):
     source_id = HiddenField('Source ID', [validators.Required()])
     source_name = HiddenField('Name')
 
+class DeleteEventForm(Form):
+    event_id = HiddenField('Event ID', [validators.Required()])
+    event_label = HiddenField('Label')
+
 class AddSourceTypeForm(Form):
     source_type = SelectField('Source Type', choices=[(source, source) for source in Source.sources.keys()])
 

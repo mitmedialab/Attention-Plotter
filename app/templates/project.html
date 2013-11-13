@@ -21,6 +21,7 @@
 <script src="/static/js/aplotter.js"></script>
 <script type="text/javascript">
     data = {{ data|safe }};
-    AttentionPlotter.createGraph(data);
+    events = {{ events|safe }};
+    AttentionPlotter.createGraph(data, events);
 </script>
 {% endblock %}
