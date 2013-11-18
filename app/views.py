@@ -73,11 +73,11 @@ def project(username, project_name):
             , 'values':[{'date':r['date'], 'value':r['value'], 'raw':r['raw'], 'label':r['label'], 'words':r.get('words', [])} for r in db.results.find(query, fields=fields, sort=[('date', pymongo.ASCENDING)])]
         }
         data.append(source_data)
-    events = db.events.find({'project_id':project['_id']}, fields= {'_id':False, 'project_id':False, 'date':False})
-    event_data = []
-    for e in events:
-        event_data.append = {'date':e['date'], 'label':e['label'], 'timestamp':e['timestamp']}
-    return render_template('project.html', project=project, data=json.dumps(data), events=json.dumps(event_data))
+    events = list(db.events.find({'project_id':project['_id']}, fields= {'_id':False, 'project_id':False, 'date':False}))
+    # Bugfix for pymongo failing to exclude _id
+    for event in events:
+        del event['_id']
+    return render_template('project.html', project=project, data=json.dumps(data), events=json.dumps(events))
 
 @app.route('/<username>/<project_name>/settings', methods=['GET', 'POST'])
 def project_settings(username, project_name):
