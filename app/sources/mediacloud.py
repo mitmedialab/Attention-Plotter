@@ -14,7 +14,8 @@ from wtforms import SelectField, validators
 from app import TaskStatus, db
 from app.sources.source import Source, CreateSourceForm
 
-stopwords = ['i', 'me', 'my', 'myself', 'we', 'our', 'ours', 'ourselves', 'you', 'your', 'yours', 'yourself', 'yourselves', 'he', 'him', 'his', 'himself', 'she', 'her', 'hers', 'herself', 'it', 'its', 'itself', 'they', 'them', 'their', 'theirs', 'themselves', 'what', 'which', 'who', 'whom', 'this', 'that', 'these', 'those', 'am', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'having', 'do', 'does', 'did', 'doing', 'a', 'an', 'the', 'and', 'but', 'if', 'or', 'because', 'as', 'until', 'while', 'of', 'at', 'by', 'for', 'with', 'about', 'against', 'between', 'into', 'through', 'during', 'before', 'after', 'above', 'below', 'to', 'from', 'up', 'down', 'in', 'out', 'on', 'off', 'over', 'under', 'again', 'further', 'then', 'once', 'here', 'there', 'when', 'where', 'why', 'how', 'all', 'any', 'both', 'each', 'few', 'more', 'most', 'other', 'some', 'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very', 's', 't', 'can', 'will', 'just', 'don', 'should', 'now']
+mc_sentence = 'http://www.mediacloud.org/admin/query/sentences'
+mc_wordcount = 'http://mediacloud.org/admin/query/wc'
 
 class MediaCloud(Source):
     
@@ -54,19 +55,18 @@ class MediaCloud(Source):
                 , 'df':'sentence'
             })
             # Query the count
-            url = 'http://mcquery1.media.mit.edu:8983/solr/collection1/select?%s' % (query)
-            result = self.xml_to_result(urllib2.urlopen(url).read())
-            result.update({
+            url = '?'.join([mc_sentence, query])
+            response = json.loads(urllib2.urlopen(url).read())['response']
+            result = {
                 'source_id': self.data['_id']
                 , 'date': timestamp
-            })
+                , 'numFound': response['numFound']
+            }
             db.raw.insert(result)
             # Query related words
-            url = 'http://mcquery1.media.mit.edu:8080/wc?%s' % (query)
+            url = '?'.join([mc_wordcount, query])
             count_result = json.loads(urllib2.urlopen(url).read())
-            for word in count_result['words']:
-                if word['term'].lower() in stopwords:
-                    continue
+            for word in count_result:
                 word.update({
                     'source_id': self.data['_id']
                     , 'date': timestamp
